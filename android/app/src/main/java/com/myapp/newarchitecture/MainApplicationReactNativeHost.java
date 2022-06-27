@@ -1,7 +1,9 @@
 package com.myapp.newarchitecture;
 
 import android.app.Application;
+
 import androidx.annotation.NonNull;
+
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
@@ -27,6 +29,7 @@ import com.myapp.BuildConfig;
 import com.myapp.newarchitecture.components.MainComponentsRegistry;
 import com.myapp.newarchitecture.modules.Calculator;
 import com.myapp.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,115 +43,115 @@ import java.util.Map;
  * `newArchEnabled` property). Is ignored otherwise.
  */
 public class MainApplicationReactNativeHost extends ReactNativeHost {
-  public MainApplicationReactNativeHost(Application application) {
-    super(application);
-  }
+    public MainApplicationReactNativeHost(Application application) {
+        super(application);
+    }
 
-  @Override
-  public boolean getUseDeveloperSupport() {
-    return BuildConfig.DEBUG;
-  }
+    @Override
+    public boolean getUseDeveloperSupport() {
+        return BuildConfig.DEBUG;
+    }
 
-  @Override
-  protected List<ReactPackage> getPackages() {
-    List<ReactPackage> packages = new PackageList(this).getPackages();
-    // Packages that cannot be autolinked yet can be added manually here, for example:
-    //     packages.add(new MyReactNativePackage());
-    // TurboModules must also be loaded here providing a valid TurboReactPackage implementation:
-    //     packages.add(new TurboReactPackage() { ... });
-    // If you have custom Fabric Components, their ViewManagers should also be loaded here
-    // inside a ReactPackage.
-    packages.add(new TurboReactPackage() {
-      @Override
-      public NativeModule getModule(String name, ReactApplicationContext reactApplicationContext) {
-        if(name.equals(Calculator.NAME)) {
-          return new Calculator(reactApplicationContext);
-        } else {
-          return null;
-        }
-      }
+    @Override
+    protected List<ReactPackage> getPackages() {
+        List<ReactPackage> packages = new PackageList(this).getPackages();
+        // Packages that cannot be autolinked yet can be added manually here, for example:
+        //     packages.add(new MyReactNativePackage());
+        // TurboModules must also be loaded here providing a valid TurboReactPackage implementation:
+        //     packages.add(new TurboReactPackage() { ... });
+        // If you have custom Fabric Components, their ViewManagers should also be loaded here
+        // inside a ReactPackage.
+        packages.add(new TurboReactPackage() {
+            @Override
+            public NativeModule getModule(String name, ReactApplicationContext reactApplicationContext) {
+                if (name.equals(Calculator.NAME)) {
+                    return new Calculator(reactApplicationContext);
+                } else {
+                    return null;
+                }
+            }
 
-      @Override
-      public ReactModuleInfoProvider getReactModuleInfoProvider() {
-        return () -> {
-          final Map<String, ReactModuleInfo> moduleInfos = new HashMap<>();
-          moduleInfos.put(
-                  Calculator.NAME,
-                  new ReactModuleInfo(
-                          Calculator.NAME,
-                          Calculator.NAME,
-                          false, // canOverrideExistingModule
-                          false, // needsEagerInit
-                          true, // hasConstants
-                          false, // isCxxModule
-                          true // isTurboModule
-                  )
-          );
+            @Override
+            public ReactModuleInfoProvider getReactModuleInfoProvider() {
+                return () -> {
+                    final Map<String, ReactModuleInfo> moduleInfos = new HashMap<>();
+                    moduleInfos.put(
+                            Calculator.NAME,
+                            new ReactModuleInfo(
+                                    Calculator.NAME,
+                                    Calculator.NAME,
+                                    false, // canOverrideExistingModule
+                                    false, // needsEagerInit
+                                    true, // hasConstants
+                                    false, // isCxxModule
+                                    true // isTurboModule
+                            )
+                    );
 
-          return moduleInfos;
+                    return moduleInfos;
+                };
+            }
+        });
+        return packages;
+    }
+
+    @Override
+    protected String getJSMainModuleName() {
+        return "index";
+    }
+
+    @NonNull
+    @Override
+    protected ReactPackageTurboModuleManagerDelegate.Builder
+    getReactPackageTurboModuleManagerDelegateBuilder() {
+        // Here we provide the ReactPackageTurboModuleManagerDelegate Builder. This is necessary
+        // for the new architecture and to use TurboModules correctly.
+        return new MainApplicationTurboModuleManagerDelegate.Builder();
+    }
+
+    @Override
+    protected JSIModulePackage getJSIModulePackage() {
+        return new JSIModulePackage() {
+            @Override
+            public List<JSIModuleSpec> getJSIModules(
+                    final ReactApplicationContext reactApplicationContext,
+                    final JavaScriptContextHolder jsContext) {
+                final List<JSIModuleSpec> specs = new ArrayList<>();
+
+                // Here we provide a new JSIModuleSpec that will be responsible of providing the
+                // custom Fabric Components.
+                specs.add(
+                        new JSIModuleSpec() {
+                            @Override
+                            public JSIModuleType getJSIModuleType() {
+                                return JSIModuleType.UIManager;
+                            }
+
+                            @Override
+                            public JSIModuleProvider<UIManager> getJSIModuleProvider() {
+                                final ComponentFactory componentFactory = new ComponentFactory();
+                                CoreComponentsRegistry.register(componentFactory);
+
+                                // Here we register a Components Registry.
+                                // The one that is generated with the template contains no components
+                                // and just provides you the one from React Native core.
+                                MainComponentsRegistry.register(componentFactory);
+
+                                final ReactInstanceManager reactInstanceManager = getReactInstanceManager();
+
+                                ViewManagerRegistry viewManagerRegistry =
+                                        new ViewManagerRegistry(
+                                                reactInstanceManager.getOrCreateViewManagers(reactApplicationContext));
+
+                                return new FabricJSIModuleProvider(
+                                        reactApplicationContext,
+                                        componentFactory,
+                                        ReactNativeConfig.DEFAULT_CONFIG,
+                                        viewManagerRegistry);
+                            }
+                        });
+                return specs;
+            }
         };
-      }
-    });
-    return packages;
-  }
-
-  @Override
-  protected String getJSMainModuleName() {
-    return "index";
-  }
-
-  @NonNull
-  @Override
-  protected ReactPackageTurboModuleManagerDelegate.Builder
-      getReactPackageTurboModuleManagerDelegateBuilder() {
-    // Here we provide the ReactPackageTurboModuleManagerDelegate Builder. This is necessary
-    // for the new architecture and to use TurboModules correctly.
-    return new MainApplicationTurboModuleManagerDelegate.Builder();
-  }
-
-  @Override
-  protected JSIModulePackage getJSIModulePackage() {
-    return new JSIModulePackage() {
-      @Override
-      public List<JSIModuleSpec> getJSIModules(
-          final ReactApplicationContext reactApplicationContext,
-          final JavaScriptContextHolder jsContext) {
-        final List<JSIModuleSpec> specs = new ArrayList<>();
-
-        // Here we provide a new JSIModuleSpec that will be responsible of providing the
-        // custom Fabric Components.
-        specs.add(
-            new JSIModuleSpec() {
-              @Override
-              public JSIModuleType getJSIModuleType() {
-                return JSIModuleType.UIManager;
-              }
-
-              @Override
-              public JSIModuleProvider<UIManager> getJSIModuleProvider() {
-                final ComponentFactory componentFactory = new ComponentFactory();
-                CoreComponentsRegistry.register(componentFactory);
-
-                // Here we register a Components Registry.
-                // The one that is generated with the template contains no components
-                // and just provides you the one from React Native core.
-                MainComponentsRegistry.register(componentFactory);
-
-                final ReactInstanceManager reactInstanceManager = getReactInstanceManager();
-
-                ViewManagerRegistry viewManagerRegistry =
-                    new ViewManagerRegistry(
-                        reactInstanceManager.getOrCreateViewManagers(reactApplicationContext));
-
-                return new FabricJSIModuleProvider(
-                    reactApplicationContext,
-                    componentFactory,
-                    ReactNativeConfig.DEFAULT_CONFIG,
-                    viewManagerRegistry);
-              }
-            });
-        return specs;
-      }
-    };
-  }
+    }
 }
