@@ -76,7 +76,7 @@ public class MainApplicationReactNativeHost extends ReactNativeHost {
                   Calculator.NAME,
                   new ReactModuleInfo(
                           Calculator.NAME,
-                          "MyDeviceInfo",
+                          Calculator.NAME,
                           false, // canOverrideExistingModule
                           false, // needsEagerInit
                           true, // hasConstants
